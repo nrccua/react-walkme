@@ -1,0 +1,15 @@
+# Components directories
+lib
+
+# Directories for debugging purpose
+app
+public
+
+# Configuration files
+.vscode
+.babelrc
+.eslintrc.js
+.npmignore
+
+# Webpack files
+webpack.config.js
