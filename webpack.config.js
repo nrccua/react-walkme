@@ -3,7 +3,7 @@ const path = require('path');
 const webpackDash = require('webpack-dashboard/plugin');
 
 const BUILD_DIR = path.resolve(__dirname, 'dist');
-const APP_DIR = path.resolve(__dirname, 'src');
+const APP_DIR = path.resolve(__dirname, 'lib');
 
 const config = {
   entry: {
