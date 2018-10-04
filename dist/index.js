@@ -178,83 +178,98 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var _walkMeID = '';
 var _testEnv = null;
+var _debug = false;
 
 /**
  * errorValidation:
+ * Validates if all conditions are met
+ * 
  * @param {boolean} isInitializing
+ * @returns {integer} errorCode
  */
 function _errorValidation() {
   var isInitializing = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
-
   var logArray = [{
-    message: 'walkme id:',
+    message: 'Instance - WalkMe ID :',
     obj: _walkMeID
   }, {
-    message: 'test Env:',
+    message: 'Instance - Test Environment:',
     obj: _testEnv
   }];
 
-  (0, _logger.groupLog)(_testEnv, 'Error validation data', logArray);
+  (0, _logger.groupLog)(_debug, 'Error validation data', logArray);
 
   if (typeof _walkMeID === 'undefined' || _walkMeID === '') {
-    (0, _logger.log)(_testEnv, '[_errorValidation] walkme id undefined', null, 'warn');
+    (0, _logger.log)(_debug, '[_errorValidation] Failed >> WalkMe ID variable not available', null, 'warn');
     return _errorCodes2.default.WALK_ME_ID;
   }
 
   if (typeof _testEnv === 'undefined' || _testEnv === null) {
-    (0, _logger.log)(_testEnv, '[_errorValidation] test env undefined', null, 'warn');
+    (0, _logger.log)(_debug, '[_errorValidation] Failed >> testEnv variable not available', null, 'warn');
     return _errorCodes2.default.ENVIRONMENT;
   }
 
   if (typeof window === 'undefined') {
-    (0, _logger.log)(_testEnv, '[_errorValidation] window undefined', null, 'warn');
+    (0, _logger.log)(_debug, '[_errorValidation] Failed >> window is undefined', null, 'warn');
     return _errorCodes2.default.WINDOW;
   }
 
   if (isInitializing === false && !window._walkMe) {
-    (0, _logger.log)(_testEnv, '[_errorValidation] walkme undefined', null, 'warn');
+    (0, _logger.log)(_debug, '[_errorValidation] Failed >> _walkMe is not available.', null, 'warn');
     return _errorCodes2.default.WALK_ME;
   }
 
-  (0, _logger.log)(_testEnv, '[_errorValidation] Validations passed!');
+  (0, _logger.log)(_debug, '[_errorValidation] Success >> Validations passed!');
+  // TODO: do something with unknown error type
   return _errorCodes2.default.UNKNOWN;
 }
 
 /**
  * initialize:
- * @param {string} walkMeID 
- * @param {boolean} testEnv 
+ * Creates new instance of WalkMe.
+ * 
+ * @param {string} walkMeID
+ * @param {boolean} testEnv
+ * @param {boolean} debug
+ * @param {function} callback
+ * @returns {object}
  */
-function initialize(walkMeID, testEnv) {
-  var callback = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+function initialize(walkMeID, testEnv, debug) {
+  var callback = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
 
   var logArray = [{
-    message: 'walkme id:',
+    message: 'Parameter - WalkMe ID:',
     obj: walkMeID
   }, {
-    message: 'test Env:',
+    message: 'Parameter - Test Env:',
     obj: testEnv
   }];
 
-  (0, _logger.groupLog)(testEnv, 'WalkMe Initialization data', logArray);
+  (0, _logger.groupLog)(debug, 'WalkMe Initialization data', logArray);
 
   _walkMeID = walkMeID;
   _testEnv = testEnv;
+  _debug = debug;
+
   var errorCode = _errorValidation(true);
+
   if (errorCode !== _errorCodes2.default.UNKNOWN) {
     return { error: _errorBuilder2.default.getErrorMessage(errorCode) };
   }
 
-  (0, _loadScript2.default)(walkMeID, testEnv, callback);
+  return (0, _loadScript2.default)(walkMeID, testEnv, callback);
 }
 
 /**
  * walkme:
+ * Gets WalkMe instance from window
+ * 
  * @returns {object} walkme instance
  */
 function walkme() {
   var errorCode = _errorValidation();
+
   if (errorCode !== _errorCodes2.default.UNKNOWN) {
     return { error: _errorBuilder2.default.getErrorMessage(errorCode) };
   }
@@ -264,11 +279,12 @@ function walkme() {
 
 /**
  * get WalkMeAPI:
- * get WalkMeAPI
+ * Gets WalkMeAPI instance from window
  * @returns {object} 
  */
 function getWalkMeAPI() {
   var errorCode = _errorValidation();
+
   if (errorCode !== _errorCodes2.default.UNKNOWN) {
     return { error: _errorBuilder2.default.getErrorMessage(errorCode) };
   }
@@ -295,10 +311,11 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = function (walkMeID, testEnv, mainCallback) {
   var TEST_ENV = testEnv ? 'test/' : '';
-  var pathtoscript = 'https://cdn.walkme.com/users/' + walkMeID + '/' + TEST_ENV + 'walkme_' + walkMeID + '_https.js';
+  var scriptPath = 'https://cdn.walkme.com/users/' + walkMeID + '/' + TEST_ENV + 'walkme_' + walkMeID + '_https.js';
 
-  loadScript(pathtoscript, function () {
-    (0, _logger.log)(testEnv, 'WalkMe loaded', window._walkMe);
+  loadScript(scriptPath, function () {
+    (0, _logger.log)(testEnv, 'WalkMe loaded on ' + window._walkMe.getBrowser());
+
     if (mainCallback) {
       mainCallback();
     }
@@ -308,22 +325,7 @@ exports.default = function (walkMeID, testEnv, mainCallback) {
 
 var _logger = __webpack_require__(0);
 
-/* export default function (walkMeID, testEnv) {
-  const TEST_ENV = testEnv ? 'test/' : '';
-
-  (function () {
-    const walkme = document.createElement('script');
-    walkme.type = 'text/javascript';
-    walkme.async = false;
-    walkme.src = `https://cdn.walkme.com/   users/${walkMeID}/${TEST_ENV}walkme_${walkMeID}_https.js`;
-
-    const s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(walkme, s);
-
-    window._walkmeConfig = { smartLoad: true };
-  })();
-} */
-function loadScript(url, callback) {
+function loadScript(url, loadedScript) {
   var script = document.createElement('script');
   script.type = 'text/javascript';
   script.src = url;
@@ -333,15 +335,11 @@ function loadScript(url, callback) {
     script.onreadystatechange = function () {
       if (script.readyState === 'loaded' || script.readyState === 'complete') {
         script.onreadystatechange = null;
-        callback();
+        loadedScript();
       }
     };
   } else {
     //Others
-    /* script.onload = () => {
-      console.log('onLoad ->> ', window._walkMe);
-      callback();
-    }; */
     var callbackTimer = setInterval(function () {
       var call = false;
       try {
@@ -350,7 +348,7 @@ function loadScript(url, callback) {
 
       if (call) {
         clearInterval(callbackTimer);
-        callback();
+        loadedScript();
       }
     }, 100);
   }
