@@ -1,0 +1,41 @@
+name: Publish and Release
+
+on:
+  pull_request:
+    branches: ["0.1.0"] # IMPORTANT: Adjust this to match valid release branches on each library
+    types: [closed]
+
+jobs:
+  publish:
+    name: Publish and Release
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: nodejs16-runner
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16.x"
+          cache: "npm"
+
+      - name: Release
+        uses: rymndhng/release-on-push-action@v0.24.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTOMATION_PAT }}
+        with:
+          tag_prefix: "v"
+          use_github_release_notes: true
+          bump_version_scheme: patch # if the PR has the label release:major, release:minor, or release:patch, this will override bump_version_scheme
+          release_name: "Release <RELEASE_VERSION>"
+
+      - name: npm login to npm-private (for npm package publishing)
+        run: |
+          npm config set registry="https://nexus.enc-np.com/repository/npm-private/"
+          npm config set _auth="${{ secrets.NPM_PRIVATE_TOKEN }}"
+          npm config ls
+      - name: Publish to Nexus
+        run: npm publish --registry=https://nexus.enc-np.com/repository/npm-private/

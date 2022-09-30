@@ -1,6 +1,6 @@
 {
   "name": "react-walkme",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React library to work with WalkMe",
   "main": "dist/index.js",
   "scripts": {
@@ -49,5 +49,8 @@
     "webpack-dashboard": "^0.4.0",
     "webpack-dev-server": "^2.5.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "publishConfig": {
+    "registry": "https://nexus.enc-np.com/repository/npm-private/"
+  }
 }
